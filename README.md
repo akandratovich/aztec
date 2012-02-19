@@ -8,7 +8,7 @@ Aztec bootstraps itself using the `az` python script. There is no separate insta
 
 1. `git clone https://github.com/kondratovich/aztec.git`
 2. Add folder to your `$PATH`.
-3. Set it to be executable. (`chmod 755 az`)
+3. Set it to be executable: `chmod +x az`.
 
 ## Compile
 
