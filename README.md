@@ -4,28 +4,48 @@ Aztec is for compiling Kotlin sources without setting your hair on fire.
 
 ## Installation
 
-Aztec bootstraps itself using the `az` python script. There is no separate install script for libraries. It installs its dependencies upon the first run, so the first run will take longer.
+Aztec is a python tool. So, to use it you need python.
+
+Aztec uses setuptools package to install itself. If you haven't it, you can download it from [PyPi](http://pypi.python.org/pypi/setuptools) or install from repository.
 
 1. `git clone https://github.com/kondratovich/aztec.git`
-2. Add folder to your `$PATH`.
-3. Set it to be executable: `chmod +x az`.
+2. `cd aztec`
+3. `python setup.py install`
 
-## Compile
+After that you can use Aztec by `az` command.
 
-You can use `az compile` command.
+_First time you launch it, Aztec downloads required Kotlin libraries._
 
-    andrew@andrew-u100 ~/dev/euler $ ../aztec/az compile
-    Usage: az compile [options]
+## Usage
 
+You can type `az` to see help.
+
+    andrew@andrew-u100 ~/dev/euler $ az
+    Aztec    	[https://github.com/kondratovich/aztec]
+    Aztec is for compiling Kotlin sources without setting your hair on fire.
+    Usage: az [options]
+    
+    available options:
+    	clean               : clean output directory
+    	help                : print help information
+    	compile             : compile sources
+    	pack                : compile sources and pack them to executable file
+    	list                : print list of installed plugins
+    	jar                 : compile sources and pack to jar
+    andrew@andrew-u100 ~/dev/euler $ 
+
+Type `az help [command]` for concrete command documentation.
+
+    andrew@andrew-u100 ~/dev/euler $ az help pack
+    Usage: az pack [options] name
+    
     Options:
       -h, --help            show this help message and exit
       -o OUTPUT, --output=OUTPUT
                             change default output folder
       -s SOURCE, --src=SOURCE
                             set files for compilation
-      -n NAME, --name=NAME  set name for jar or pack file
-      -p, --pack            create executable file
-      -j, --jar             create jar file
+
 
 ## Plugins
 
@@ -35,6 +55,10 @@ Aztec built on plugin architecture. You can check sources for examples.
 
 *    Documentation and tutorials
 *    Project / module automtic detection
-*    IDEA skeleton integration
+*    IDEA project skeleton integration
 *    Project dependencies support
 *    Test support
+
+## Contribution
+
+Your ideas, issues and pull requests are welcome.
