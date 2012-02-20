@@ -6,7 +6,7 @@ Aztec is for compiling Kotlin sources without setting your hair on fire.
 
 Aztec is a python tool. So, to use it you need python.
 
-Aztec uses setuptools package to install itself. If you haven't it, you can download it from [PyPi](http://pypi.python.org/pypi/setuptools) or install from repository.
+Aztec uses `setuptools` package to install itself. If you haven't it, you can download it from [PyPi](http://pypi.python.org/pypi/setuptools) or install from repository.
 
 1. `git clone https://github.com/kondratovich/aztec.git`
 2. `cd aztec`
