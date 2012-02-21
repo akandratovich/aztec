@@ -1,20 +1,16 @@
 from setuptools import setup, find_packages
 
-commit = open('./.git/FETCH_HEAD', 'r')
-commit_data = commit.read()
-commit.close()
-
-cdata = commit_data[:40]
-
 log = open('./.git/logs/HEAD', 'r')
 log_data = log.read()
 log.close()
 
-cp0 = log_data.find(cdata)
-cp1 = log_data[cp0 + 40:].find('>')
-cp = log_data[cp0 + cp1 + 42:]
+data = filter(lambda e: len(e) > 0, log_data.split("\n"))[-1]
 
-ldata = cp.split(' ')[0]
+cdata = data.split(" ")[1]
+print cdata
+
+ldata = data.split("> ")[-1].split(" ")[0]
+print ldata
 
 cfgf = open('./aztec/cfg.py', 'w')
 cfgf.write("""
