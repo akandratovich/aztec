@@ -2,6 +2,7 @@ import sys
 import os
 import imp
 import urllib
+import urllib2
 import shutil
 
 # http://teamcity.jetbrains.com/guestAuth/repository/download/bt343/latest.lastSuccessful/
@@ -11,6 +12,7 @@ asml = 'asm/asm-util/3.3.1/asm-util-3.3.1.jar'
 jbtc = 'http://teamcity.jetbrains.com/guestAuth/repository/download/'
 kl = [
   {'bt343': [
+      'teamcity-ivy.xml',
       'core/asm-commons.jar',
       'core/guava-11.0.1.jar',
       'core/intellij-core.jar',
@@ -21,6 +23,7 @@ kl = [
       'core/picocontainer.jar'
   ]},
   {'bt344': [
+      'teamcity-ivy.xml',
       'kotlin-build-tools.jar',
       'kotlin-compiler.jar',
       'kotlin-runtime.jar'
@@ -59,15 +62,33 @@ def find_java():
 
     return None
 
+def check_and_download(path, dest, check):
+  if not os.path.exists(dest):
+    download(path, dest)
+
+  if check:
+    request = urllib2.Request(path)
+    request.get_method = lambda : 'HEAD'
+
+    response = urllib2.urlopen(request)
+    clh = response.headers['Content-Length']
+    if clh != None:
+      cl = long(clh)
+      if cl != os.path.getsize(dest):
+        os.remove(dest)
+        download(path, dest)
+
 def download(path, dest):
   print '\t[GET] %s' % path
   parent_sure(dest)
   (_, message) = urllib.urlretrieve(path, dest)
 
-  cl = long(message.getheader('content-length'))
-  if cl != os.path.getsize(dest):
-    print "\t[ERROR] could not download %s" % path
-    os.path.remove(dest)
+  clh = message.getheader('content-length')
+  if clh != None:
+    cl = long(clh)
+    if cl != os.path.getsize(dest):
+      print "\t[ERROR] could not download %s" % path
+      os.remove(dest)
 
 def rmtree(path):
   if not os.path.exists(path):
@@ -89,25 +110,23 @@ def parent_sure(path0):
   path = os.path.abspath(os.path.join(path0, os.path.pardir))
   return dir_sure(path)
 
-def homa_path():
+def home_path():
   if 'HOME' in os.environ:
     return os.environ['HOME']
   return os.environ['USERPROFILE']
 
-def find_kotlin():
-  azp = dir_sure(os.path.join(homa_path(), '.az', 'core'))
-  cps = []
+def find_kotlin(check=False):
+  azp = dir_sure(os.path.join(home_path(), '.az', 'core'))
 
-  if not os.path.exists(os.path.join(azp, asml)):
-    download(asmr + asml, os.path.join(azp, asml))
+  cps = []
+  check_and_download(asmr + asml, os.path.join(azp, asml), check)
   cps.append(os.path.join(azp, asml))
 
   for km in kl:
     for bt in km:
       for jar in km[bt]:
         local = os.path.join(azp, bt, jar)
-        if not os.path.exists(local):
-          download(jbtc + bt + '/latest.lastSuccessful/' + jar, local)
+        check_and_download(jbtc + bt + '/latest.lastSuccessful/' + jar, local, check)
         cps.append(local)
 
   return os.pathsep.join(cps)

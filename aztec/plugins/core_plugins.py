@@ -1,45 +1,44 @@
-from aztec import core
+from aztec import core, cfg
 import optparse
 import os
-import tempfile
-import subprocess
-import sys
 import time
-import shutil
 
-__az__ = ['ListPlugin', 'CompilePlugin', 'HelpPlugin', 'JarPlugin', 'PackPlugin', 'CleanPlugin']
-
-pack_unx ="""#!/bin/bash
-
-function die() {
-    echo "$1"
-    exit 1
-}
-
-# Taken from Debian Developers Reference Chapter 6
-function pathfind() {
-     OLDIFS="$IFS"
-     IFS=:
-     for p in $PATH; do
-         if [ -x "$p/$*" ]; then
-             IFS="$OLDIFS"
-             return 0
-         fi
-     done
-     IFS="$OLDIFS"
-     return 1
-}
-
-pathfind "java" || die "[ERROR] could not find: java in \$PATH"
-
-exec java -jar $0 "$@"
+__az__ = ['ListPlugin', 'HelpPlugin', 'CleanPlugin', 'UpgradePlugin', 'VersionPlugin']
 
 
+class UpgradePlugin(core.Plugin):
+  def __init__(self, ctx):
+    self.ctx = ctx
 
-"""
+  def doc(self):
+    opts = self.make_opts()
+    opts.print_help()
+    return True
 
-pack_win = "@echo off\n\r\"%s\" -jar %%0 %%*\n\rexit /b 0\n\r"
+  def make_opts(self):
+    parser = optparse.OptionParser()
+    parser.add_option("-f", "--force", action="store_true",
+                      help="force reload of libraries",
+                      default=False)
 
+    parser.set_usage("az upgrade [options]")
+    return parser
+
+  def execute(self, argv):
+    opts = self.make_opts()
+    (options, args) = opts.parse_args(argv)
+
+    if options.force:
+      azp = os.path.join(core.home_path(), '.az', 'core')
+      core.rmtree(azp)
+
+    self.ctx.defaults['KOTLIN_CP'] = core.find_kotlin(True)
+
+  def cmd(self):
+    return "upgrade"
+
+  def description(self):
+    return "upgrade kotlin libraries upto last version"
 
 class ListPlugin(core.Plugin):
   def __init__(self, ctx):
@@ -88,7 +87,7 @@ class CleanPlugin(core.Plugin):
   def description(self):
     return "clean output directory"
 
-class CompilePlugin(core.Plugin):
+class VersionPlugin(core.Plugin):
   def __init__(self, ctx):
     self.ctx = ctx
 
@@ -99,175 +98,35 @@ class CompilePlugin(core.Plugin):
 
   def make_opts(self):
     parser = optparse.OptionParser()
-    parser.add_option("-o", "--output", dest="output",
-                      help="change default output folder",
-                      default=os.path.join(self.ctx.defaults['PROJECT_PATH'], "output"))
-    parser.add_option("-s", "--src", dest="source",
-                      default=self.ctx.defaults['PROJECT_PATH'],
-                      help="set files for compilation")
-
-    parser.set_usage("az compile [options]")
+    parser.set_usage("az version")
+    parser.set_description("show version of Aztec and Kotlin")
     return parser
 
   def execute(self, argv):
-    """ compile kotlin source with KotlinCompiler"""
+    print "Aztec commit            : %s" % cfg.aztec_commit
+    print "Aztec commit time       : %s" % time.ctime(cfg.aztec_time)
 
-    opts = self.make_opts()
-    (options, args) = opts.parse_args(argv)
+    azp = os.path.join(core.home_path(), '.az', 'core')
 
-    source = os.path.abspath(options.source)
-    output = os.path.abspath(options.output)
-    core.dir_sure(output)
+    bt343 = open(os.path.join(azp, 'bt343', 'teamcity-ivy.xml'), 'r')
+    bt343c = bt343.read()
+    bt343.close()
 
-    cmd = []
-    cmd.append(self.ctx.defaults['JAVA_PATH'])
-    cmd.append("-cp")
-    cmd.append(self.ctx.defaults['KOTLIN_CP'])
-    cmd.append("org.jetbrains.jet.cli.KotlinCompiler")
-    cmd.append("-includeRuntime")
-    cmd.append("-output")
-    cmd.append(output)
-    cmd.append("-src")
-    cmd.append(source)
+    bt344 = open(os.path.join(azp, 'bt344', 'teamcity-ivy.xml'), 'r')
+    bt344c = bt344.read()
+    bt344.close()
 
-    fail = subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
+    bt343v = bt343c[bt343c.find('revision="') + 10:].split('"')[0]
+    bt344v = bt344c[bt344c.find('revision="') + 10:].split('"')[0]
+
+    print "Kotlin compiler version : %s" % bt344v
+    print "Core libraries version  : %s" % bt343v
 
   def cmd(self):
-    return "compile"
+    return "version"
 
   def description(self):
-    return "compile sources"
-
-class PackPlugin(core.Plugin):
-  def __init__(self, ctx):
-    self.ctx = ctx
-
-  def doc(self):
-    opts = self.make_opts()
-    opts.print_help()
-    return True
-
-  def make_opts(self):
-    parser = optparse.OptionParser()
-    parser.add_option("-o", "--output", dest="output",
-                      help="change default output folder",
-                      default=os.path.join(self.ctx.defaults['PROJECT_PATH'], "output"))
-    parser.add_option("-s", "--src", dest="source",
-                      default=self.ctx.defaults['PROJECT_PATH'],
-                      help="set files for compilation")
-
-    parser.set_usage("az pack [options] name")
-    return parser
-
-  def execute(self, argv):
-    """ compile kotlin source with KotlinCompiler"""
-
-    opts = self.make_opts()
-    (options, args) = opts.parse_args(argv)
-
-    if len(args) == 0:
-      opts.print_help()
-      exit(0)
-
-    name = args[0]
-    if os.name == 'nt':
-      name += '.bat'
-
-    source = os.path.abspath(options.source)
-    output = os.path.abspath(options.output)
-    core.dir_sure(output)
-
-    jfile, jarfile = tempfile.mkstemp(suffix='.jar')
-
-    cmd = []
-    cmd.append(self.ctx.defaults['JAVA_PATH'])
-    cmd.append("-cp")
-    cmd.append(self.ctx.defaults['KOTLIN_CP'])
-    cmd.append("org.jetbrains.jet.cli.KotlinCompiler")
-    cmd.append("-includeRuntime")
-    cmd.append("-jar")
-    cmd.append(jarfile)
-    cmd.append("-src")
-    cmd.append(source)
-
-    fail = subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
-
-    if not fail:
-      shell = (pack_win % self.ctx.defaults['JAVA_PATH']) if os.name == 'nt' else pack_unx
-      of = os.path.join(output, name)
-      fh_shell = open(of, 'w+b')
-      fh_shell.write(shell)
-      # fh_shell.write(shellstub)
-      fh_jar   = open(jarfile, 'rb')
-      shutil.copyfileobj(fh_jar, fh_shell)
-      fh_shell.close()
-      fh_jar.close()
-      os.close(jfile)
-      os.unlink(jarfile)
-      os.chmod(of, 0755)
-
-  def cmd(self):
-    return "pack"
-
-  def description(self):
-    return "compile sources and pack them to executable file"
-
-class JarPlugin(core.Plugin):
-  def __init__(self, ctx):
-    self.ctx = ctx
-
-  def doc(self):
-    opts = self.make_opts()
-    opts.print_help()
-    return True
-
-  def make_opts(self):
-    parser = optparse.OptionParser()
-    parser.add_option("-o", "--output", dest="output",
-                      help="change default output folder",
-                      default=os.path.join(self.ctx.defaults['PROJECT_PATH'], "output"))
-    parser.add_option("-s", "--src", dest="source",
-                      default=self.ctx.defaults['PROJECT_PATH'],
-                      help="set files for compilation")
-
-    parser.set_usage("az jar [options] name")
-    return parser
-
-  def execute(self, argv):
-    """ compile kotlin source with KotlinCompiler"""
-
-    opts = self.make_opts()
-    (options, args) = opts.parse_args(argv)
-
-    if len(args) == 0:
-      opts.print_help()
-      exit(0)
-
-    name = args[0]
-    source = os.path.abspath(options.source)
-    output = os.path.abspath(options.output)
-    core.dir_sure(output)
-
-    jarfile = os.path.join(output, name + '.jar')
-
-    cmd = []
-    cmd.append(self.ctx.defaults['JAVA_PATH'])
-    cmd.append("-cp")
-    cmd.append(self.ctx.defaults['KOTLIN_CP'])
-    cmd.append("org.jetbrains.jet.cli.KotlinCompiler")
-    cmd.append("-includeRuntime")
-    cmd.append("-jar")
-    cmd.append(jarfile)
-    cmd.append("-src")
-    cmd.append(source)
-
-    subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
-
-  def cmd(self):
-    return "jar"
-
-  def description(self):
-    return "compile sources and pack to jar"
+    return "show version"
 
 class HelpPlugin(core.Plugin):
   def __init__(self, ctx):
@@ -292,9 +151,6 @@ class HelpPlugin(core.Plugin):
           print "\t%-20s%s %s" % (p.cmd(), ':', p.description())
         return
 
-    print "Aztec\t\t[https://github.com/kondratovich/aztec]"
-    # print "Aztec is for automating Kotlin projects without setting your hair on fire."
-    print "Aztec is for compiling Kotlin sources without setting your hair on fire."
     print "Usage: az [options]"
     print ""
 
