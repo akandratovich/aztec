@@ -21,18 +21,20 @@ _First time you launch it, Aztec downloads required Kotlin libraries._
 You can type `az` to see help.
 
     andrew@andrew-u100 ~/dev/euler $ az
-    Aztec    	[https://github.com/kondratovich/aztec]
+    Aztec [https://github.com/kondratovich/aztec]
     Aztec is for compiling Kotlin sources without setting your hair on fire.
+    
     Usage: az [options]
     
     available options:
-    	clean               : clean output directory
-    	help                : print help information
-    	compile             : compile sources
-    	pack                : compile sources and pack them to executable file
-    	list                : print list of installed plugins
-    	jar                 : compile sources and pack to jar
-    andrew@andrew-u100 ~/dev/euler $ 
+            clean               : clean output directory
+            help                : print help information
+            compile             : compile sources
+            pack                : compile sources and pack them to executable file
+            upgrade             : upgrade kotlin libraries upto last version
+            list                : print list of installed plugins
+            version             : show version
+            jar                 : compile sources and pack them to jar
 
 Type `az help [command]` for concrete command documentation.
 
