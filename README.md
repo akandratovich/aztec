@@ -10,7 +10,7 @@ Aztec uses `setuptools` package to install itself. If you haven't it, you can do
 
 1. `git clone https://github.com/kondratovich/aztec.git`
 2. `cd aztec`
-3. `python setup.py install`
+3. `sudo python setup.py install`
 
 After that you can use Aztec by `az` command.
 
