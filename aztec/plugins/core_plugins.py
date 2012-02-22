@@ -2,9 +2,21 @@ from aztec import core, cfg
 import optparse
 import os
 import time
+import tempfile
 
 __az__ = ['ListPlugin', 'HelpPlugin', 'CleanPlugin', 'UpgradePlugin', 'VersionPlugin']
 
+
+def ivy_version(btn, path = None):
+  if path == None:
+    azp = os.path.join(core.home_path(), '.az', 'core')
+    path = os.path.join(azp, btn, 'teamcity-ivy.xml')
+  
+  bt = open(path, 'r')
+  btc = bt.read()
+  bt.close()
+
+  return btc[btc.find('revision="') + 10:].split('"')[0]
 
 class UpgradePlugin(core.Plugin):
   def __init__(self, ctx):
@@ -23,7 +35,25 @@ class UpgradePlugin(core.Plugin):
 
     parser.set_usage("az upgrade [options]")
     return parser
+  
+  def _check(self):
+    azp = os.path.join(core.home_path(), '.az', 'core')
+    for km in core.kl:
+      for bt in km:
+        ivy = km[bt][0]
 
+        url = core.jbtc + bt + '/latest.lastSuccessful/' + ivy
+        _, tivy = tempfile.mkstemp(suffix='.xml')
+        core.download(url, tivy, False)
+
+        btv0 = ivy_version(bt, tivy)
+        btv1 = ivy_version(bt)
+        os.unlink(tivy)
+        if btv0 != btv1:
+          for lib in km[bt]:
+            local = os.path.join(azp, bt, lib)
+            os.remove(local)
+  
   def execute(self, argv):
     opts = self.make_opts()
     (options, args) = opts.parse_args(argv)
@@ -31,8 +61,10 @@ class UpgradePlugin(core.Plugin):
     if options.force:
       azp = os.path.join(core.home_path(), '.az', 'core')
       core.rmtree(azp)
+    else:
+      self._check()
 
-    self.ctx.defaults['KOTLIN_CP'] = core.find_kotlin(True)
+    self.ctx.defaults['KOTLIN_CP'] = core.find_kotlin()
 
   def cmd(self):
     return "upgrade"
@@ -106,21 +138,8 @@ class VersionPlugin(core.Plugin):
     print "Aztec commit            : %s" % cfg.aztec_commit
     print "Aztec commit time       : %s" % time.ctime(cfg.aztec_time)
 
-    azp = os.path.join(core.home_path(), '.az', 'core')
-
-    bt343 = open(os.path.join(azp, 'bt343', 'teamcity-ivy.xml'), 'r')
-    bt343c = bt343.read()
-    bt343.close()
-
-    bt344 = open(os.path.join(azp, 'bt344', 'teamcity-ivy.xml'), 'r')
-    bt344c = bt344.read()
-    bt344.close()
-
-    bt343v = bt343c[bt343c.find('revision="') + 10:].split('"')[0]
-    bt344v = bt344c[bt344c.find('revision="') + 10:].split('"')[0]
-
-    print "Kotlin compiler version : %s" % bt344v
-    print "Core libraries version  : %s" % bt343v
+    print "Kotlin compiler version : %s" % ivy_version('bt344')
+    print "Core libraries version  : %s" % ivy_version('bt343')
 
   def cmd(self):
     return "version"

@@ -2,7 +2,6 @@ import sys
 import os
 import imp
 import urllib
-import urllib2
 import shutil
 
 # http://teamcity.jetbrains.com/guestAuth/repository/download/bt343/latest.lastSuccessful/
@@ -62,24 +61,13 @@ def find_java():
 
     return None
 
-def check_and_download(path, dest, check):
+def _download(path, dest):
   if not os.path.exists(dest):
     download(path, dest)
 
-  if check:
-    request = urllib2.Request(path)
-    request.get_method = lambda : 'HEAD'
-
-    response = urllib2.urlopen(request)
-    clh = response.headers['Content-Length']
-    if clh != None:
-      cl = long(clh)
-      if cl != os.path.getsize(dest):
-        os.remove(dest)
-        download(path, dest)
-
-def download(path, dest):
-  print '\t[GET] %s' % path
+def download(path, dest, text=True):
+  if text:
+    print '\t[GET] %s' % path
   parent_sure(dest)
   (_, message) = urllib.urlretrieve(path, dest)
 
@@ -115,18 +103,18 @@ def home_path():
     return os.environ['HOME']
   return os.environ['USERPROFILE']
 
-def find_kotlin(check=False):
+def find_kotlin():
   azp = dir_sure(os.path.join(home_path(), '.az', 'core'))
 
   cps = []
-  check_and_download(asmr + asml, os.path.join(azp, asml), check)
+  _download(asmr + asml, os.path.join(azp, asml))
   cps.append(os.path.join(azp, asml))
 
   for km in kl:
     for bt in km:
       for jar in km[bt]:
         local = os.path.join(azp, bt, jar)
-        check_and_download(jbtc + bt + '/latest.lastSuccessful/' + jar, local, check)
+        _download(jbtc + bt + '/latest.lastSuccessful/' + jar, local)
         cps.append(local)
 
   return os.pathsep.join(cps)
