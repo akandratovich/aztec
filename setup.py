@@ -5,12 +5,8 @@ log_data = log.read()
 log.close()
 
 data = filter(lambda e: len(e) > 0, log_data.split("\n"))[-1]
-
 cdata = data.split(" ")[1]
-print cdata
-
 ldata = data.split("> ")[-1].split(" ")[0]
-print ldata
 
 cfgf = open('./aztec/cfg.py', 'w')
 cfgf.write("""
