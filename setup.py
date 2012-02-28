@@ -29,7 +29,8 @@ setup(
     url = "http://github.com/kondratovich/aztec",
     entry_points = {
         'console_scripts': [
-            'az = aztec.az:az'
+            'az = aztec.az:az',
+            'azs = aztec.azs:azs'
         ]
     }
 )
