@@ -1,3 +1,0 @@
-
-aztec_commit = 'ab8797c644b87935b12951305f3a5d9d76a403e1'
-aztec_time = 1330423192
