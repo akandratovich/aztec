@@ -43,11 +43,12 @@ class UpgradePlugin(core.Plugin):
         ivy = km[bt][0]
 
         url = core.jbtc + bt + '/latest.lastSuccessful/' + ivy
-        _, tivy = tempfile.mkstemp(suffix='.xml')
+        fdivy, tivy = tempfile.mkstemp(suffix='.xml')
         core.download(url, tivy, False)
 
         btv0 = ivy_version(bt, tivy)
         btv1 = ivy_version(bt)
+        os.close(fdivy)
         os.unlink(tivy)
         if btv0 != btv1:
           for lib in km[bt]:
