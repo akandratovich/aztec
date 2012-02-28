@@ -13,10 +13,9 @@ import subprocess
 main_stub = "fun main(args : Array<String>) {\n\r%s\n\r}"
 
 def write_source(source):
-  _, fp = tempfile.mkstemp(suffix='.kt')
-  fd = open(fp, "w")
-  fd.write(main_stub % source)
-  fd.close()
+  fd, fp = tempfile.mkstemp(suffix='.kt')
+  os.write(fd, main_stub % source)
+  os.close(fd)
   return fp
 
 def _hash(fp):
@@ -33,7 +32,7 @@ def get_compiled(path):
   ex = os.path.join(azc(), shj + '.jar')
   if os.path.exists(ex):
     return ex
-  
+
   core.Aztec([sys.argv[0], "jar", "-o", azc(), "-s", path, shj])
   return ex
 
@@ -48,7 +47,7 @@ def run(path, argv):
 
 def cut(path):
   f = open(path, "r")
-  data = f.read()
+  data = f.read().strip()
   f.close()
   if data[0] == '#':
     data = '//' + data
@@ -57,16 +56,16 @@ def cut(path):
 def azs():
   if len(sys.argv) < 2:
     return
-  
+
   sp = sys.argv[1]
   uf = os.path.exists(sp)
   source = write_source(cut(sp) if uf else sp)
   if not os.path.exists(source):
     print "\t[ERROR] could not find `%s`" % source
     return
-  
+
   jpath = get_compiled(source)
-  os.remove(source)
+  os.unlink(source)
 
   if not os.path.exists(jpath): return
   run(jpath, sys.argv[2:])

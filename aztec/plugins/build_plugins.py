@@ -4,7 +4,6 @@ import os
 import tempfile
 import subprocess
 import sys
-import time
 import shutil
 
 __az__ = ['CompilePlugin', 'JarPlugin', 'PackPlugin']

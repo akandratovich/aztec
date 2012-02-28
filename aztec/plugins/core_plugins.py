@@ -11,7 +11,7 @@ def ivy_version(btn, path = None):
   if path == None:
     azp = os.path.join(core.home_path(), '.az', 'core')
     path = os.path.join(azp, btn, 'teamcity-ivy.xml')
-  
+
   bt = open(path, 'r')
   btc = bt.read()
   bt.close()
@@ -35,7 +35,7 @@ class UpgradePlugin(core.Plugin):
 
     parser.set_usage("az upgrade [options]")
     return parser
-  
+
   def _check(self):
     azp = os.path.join(core.home_path(), '.az', 'core')
     for km in core.kl:
@@ -53,7 +53,7 @@ class UpgradePlugin(core.Plugin):
           for lib in km[bt]:
             local = os.path.join(azp, bt, lib)
             os.remove(local)
-  
+
   def execute(self, argv):
     opts = self.make_opts()
     (options, args) = opts.parse_args(argv)
