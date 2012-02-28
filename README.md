@@ -23,9 +23,10 @@ You can type `az` to see help.
     andrew@andrew-u100 ~/dev/euler $ az
     Aztec [https://github.com/kondratovich/aztec]
     Aztec is for compiling Kotlin sources without setting your hair on fire.
-    
+    You can use `azs` to run Kotlin file like a script.
+
     Usage: az [options]
-    
+
     available options:
             clean               : clean output directory
             help                : print help information
@@ -40,7 +41,7 @@ Type `az help [command]` for concrete command documentation.
 
     andrew@andrew-u100 ~/dev/euler $ az help pack
     Usage: az pack [options] name
-    
+
     Options:
       -h, --help            show this help message and exit
       -o OUTPUT, --output=OUTPUT
@@ -48,6 +49,28 @@ Type `az help [command]` for concrete command documentation.
       -s SOURCE, --src=SOURCE
                             set files for compilation
 
+
+## Scripting
+
+You can write scripts on Kotlin and execute them with `azs` command. Your scripts will be cached, so only first run will trigger the compilation:
+
+    C:\devel-kotlin\euler>cat demo.kt
+    println("hello world")
+
+    C:\devel-kotlin\euler>azs demo.kt
+    hello world
+    time: 2.1970000267
+
+    C:\devel-kotlin\euler>azs demo.kt
+    hello world
+    time: 0.0849997997284
+
+On unix systems you can add `#!/usr/bin/env azs` at first line of file and make this script executable.
+
+You can write code in command line for quick testing:
+
+    C:\devel-kotlin\euler>azs "println(\"hello from command line\")"
+    hello from command line
 
 ## Plugins
 
